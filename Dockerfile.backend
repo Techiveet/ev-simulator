@@ -15,6 +15,8 @@ WORKDIR /usr/app
 COPY --from=builder /usr/builder/node_modules ./node_modules
 COPY --from=builder /usr/builder/dist ./dist
 COPY --from=builder /usr/builder/package.json ./package.json
+# The simulator writes logs/ and persists station configurations under dist/assets.
+RUN mkdir -p logs && chown -R node:node logs dist
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

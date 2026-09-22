@@ -11,6 +11,6 @@ services:
     build: { context: ., dockerfile: Dockerfile.ui }
     restart: unless-stopped
     depends_on: [simulator]
-    ports: ['127.0.0.1:${SIM_UI_PORT:-8091}:3030']
+    ports: ['127.0.0.1:${SIM_UI_PORT:-8091}:80']
     volumes:
-      - '${SIM_CONFIG_DIR:-/opt/coolify-apps/e-simulator/config}/ui-config.json:/usr/app/dist/config.json:ro'
+      - '${SIM_CONFIG_DIR:-/opt/coolify-apps/e-simulator/config}/ui-config.json:/usr/share/nginx/html/config.json:ro'
