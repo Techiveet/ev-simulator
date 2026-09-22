@@ -1,0 +1,16 @@
+# Coolify (Docker Compose build pack). Set SIM_CONFIG_DIR, SIM_BACKEND_PORT, SIM_UI_PORT per environment.
+# The config directory is host-managed (contains the OCPP registration token) and is NOT in Git.
+services:
+  simulator:
+    build: { context: ., dockerfile: Dockerfile.backend }
+    restart: unless-stopped
+    ports: ['127.0.0.1:${SIM_BACKEND_PORT:-8090}:8080']
+    volumes:
+      - '${SIM_CONFIG_DIR:-/opt/coolify-apps/e-simulator/config}/backend-config.json:/usr/app/dist/assets/config.json:ro'
+  simulator-ui:
+    build: { context: ., dockerfile: Dockerfile.ui }
+    restart: unless-stopped
+    depends_on: [simulator]
+    ports: ['127.0.0.1:${SIM_UI_PORT:-8091}:3030']
+    volumes:
+      - '${SIM_CONFIG_DIR:-/opt/coolify-apps/e-simulator/config}/ui-config.json:/usr/app/dist/config.json:ro'

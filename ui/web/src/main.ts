@@ -14,7 +14,6 @@ const initializeApp = (app: AppType, config: ConfigurationData) => {
     console.error('Error:', error)
     console.info('Vue instance:', instance)
     console.info('Error info:', info)
-    // TODO: add code for UI notifications or other error handling logic
   }
   if (!Array.isArray(config.uiServer)) {
     config.uiServer = [config.uiServer]
@@ -43,28 +42,46 @@ const initializeApp = (app: AppType, config: ConfigurationData) => {
   app.use(router).use(ToastPlugin).mount('#app')
 }
 
+// Fallback only. The real configuration is served at /config.json and is
+// bind-mounted into the container, so it can change without a rebuild.
+// NOTE: `secure: true` matters - the UI is served over HTTPS and a browser
+// refuses to open an insecure ws:// socket from an HTTPS page.
+const fallbackConfig = {
+  uiServer: {
+    authentication: {
+      enabled: false,
+      password: 'admin',
+      type: 'protocol-basic-auth',
+      username: 'admin',
+    },
+    host: globalThis.location.hostname.replace(/^e-simulator\./, 'e-simulator-api.'),
+    port: 443,
+    protocol: 'ui',
+    secure: true,
+    version: '0.0.1',
+  },
+}
+
 fetch('/config.json')
   .then(response => {
     if (!response.ok) {
-      // TODO: add code for UI notifications or other error handling logic
-      console.error('Failed to fetch app configuration')
+      console.error('Failed to fetch app configuration, using fallback')
+      initializeApp(app, fallbackConfig as unknown as ConfigurationData)
       return undefined
     }
-    response
-      .json()
-      // eslint-disable-next-line promise/no-nesting
-      .then(config => {
-        initializeApp(app, config as ConfigurationData)
-        return undefined
-      })
-      // eslint-disable-next-line promise/no-nesting
-      .catch((error: unknown) => {
-        // TODO: add code for UI notifications or other error handling logic
-        console.error('Error at deserializing JSON app configuration:', error)
-      })
+    return response.json()
+  })
+  .then(config => {
+    if (config != null) {
+      initializeApp(app, config as ConfigurationData)
+    }
     return undefined
   })
   .catch((error: unknown) => {
-    // TODO: add code for UI notifications or other error handling logic
-    console.error('Error at fetching app configuration:', error)
+    console.error('Error fetching app configuration, using fallback:', error)
+    try {
+      initializeApp(app, fallbackConfig as unknown as ConfigurationData)
+    } catch (initError: unknown) {
+      console.error('Error initializing app:', initError)
+    }
   })
