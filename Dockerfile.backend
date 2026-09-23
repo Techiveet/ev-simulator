@@ -1,0 +1,24 @@
+# Simulator backend. Runtime config is bind-mounted at /usr/app/dist/assets/config.json
+# (supervision URL incl. registration token, station templates, UI server auth).
+FROM node:22-alpine AS builder
+WORKDIR /usr/builder
+COPY . ./
+RUN apk add --no-cache --virtual .gyp build-base python3 \
+ && corepack enable && corepack prepare pnpm@10.9.0 --activate \
+ && pnpm install --ignore-scripts --frozen-lockfile --filter e-mobility-charging-stations-simulator \
+ && pnpm build \
+ && apk del .gyp
+
+FROM node:22-alpine
+ENV NODE_ENV=production NODE_OPTIONS="--stack-trace-limit=1024 --max-old-space-size=768"
+WORKDIR /usr/app
+COPY --from=builder /usr/builder/node_modules ./node_modules
+COPY --from=builder /usr/builder/dist ./dist
+COPY --from=builder /usr/builder/package.json ./package.json
+# The simulator writes logs/ and persists station configurations under dist/assets.
+RUN mkdir -p logs && chown -R node:node logs dist
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "require('net').connect(8080,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"
+CMD ["node", "dist/start.js"]
