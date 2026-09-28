@@ -1,0 +1,52 @@
+{
+  "idTagsFile": "idtags.json",
+  "baseName": "CS-SMOKE",
+  "chargePointModel": "Simulator simple",
+  "chargePointVendor": "Ovomaltin",
+  "power": 50000,
+  "powerUnit": "W",
+  "powerSharedByConnectors": true,
+  "currentOutType": "DC",
+  "numberOfConnectors": 1,
+  "randomConnectors": false,
+  "Connectors": {
+    "0": {},
+    "1": {
+      "bootStatus": "Available",
+      "MeterValues": [
+        {
+          "unit": "Percent",
+          "context": "Sample.Periodic",
+          "measurand": "SoC",
+          "location": "EV"
+        },
+        {
+          "unit": "Wh",
+          "context": "Sample.Periodic"
+        }
+      ]
+    }
+  },
+  "Configuration": {
+    "configurationKey": [
+      {
+        "key": "MeterValuesSampledData",
+        "readonly": false,
+        "value": "SoC,Energy.Active.Import.Register,Voltage"
+      },
+      {
+        "key": "MeterValueSampleInterval",
+        "readonly": false,
+        "value": "10"
+      },
+      {
+        "key": "SupportedFeatureProfiles",
+        "readonly": true,
+        "value": "Core,FirmwareManagement,LocalAuthListManagement,SmartCharging,RemoteTrigger,Reservation"
+      }
+    ]
+  },
+  "AutomaticTransactionGenerator": {
+    "enable": false
+  }
+}

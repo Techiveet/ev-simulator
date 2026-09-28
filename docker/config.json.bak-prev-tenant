@@ -1,6 +1,6 @@
 {
   "supervisionUrls": [
-    "ws://server:8010/OCPP16/6ab535c9ab19f1e215bf59b6/6ab53af1d4c0264d4e01b506"
+    "ws://server:8010/OCPP16/5c866e81a2d9593de43efdb4/6ab413e00ea67bd1c7160057"
   ],
   "supervisionUrlDistribution": "round-robin",
   "log": {
@@ -52,10 +52,6 @@
     {
       "file": "virtual-simple-atg.station-template.json",
       "numberOfStations": 5
-    },
-    {
-      "file": "cs-smoke.station-template.json",
-      "numberOfStations": 1
     }
   ]
 }

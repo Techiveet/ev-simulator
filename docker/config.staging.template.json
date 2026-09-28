@@ -1,6 +1,6 @@
 {
   "supervisionUrls": [
-    "ws://server:8010/OCPP16/6ab535c9ab19f1e215bf59b6/6ab53af1d4c0264d4e01b506"
+    "ws://server:8010/OCPP16/__TENANT__/__TOKEN__"
   ],
   "supervisionUrlDistribution": "round-robin",
   "log": {
