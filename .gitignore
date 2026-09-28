@@ -121,3 +121,8 @@ temp/
 performanceRecords.json
 performanceRecords.json.lock
 *.db
+
+# Generated per-boot by the stack repo
+docker/config.staging.json
+# Local backup
+docker/config.json.bak*
