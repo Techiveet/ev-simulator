@@ -1,3 +1,35 @@
+# TechHive eMobility — simulator fork
+
+> **This is TechHive's deployment fork of SAP's charging-station simulator.** It provides the virtual charging-station fleet for the [e-mobility stack](https://github.com/techhiveet-hub/e-mobility-stack) — the demo/CI/staging environment of the TechHive eMobility (VoltWay) charging platform. Everything below the horizontal rule is the upstream SAP documentation; read this section first.
+
+## What this fork is used for
+
+Inside the TechHive platform the simulator plays three roles:
+
+1. **Demo fleet** — 5 always-on charging stations (template `virtual-simple-atg.station-template.json`, station ids `CS-BASIC…`) so the dashboards, portals and mobile app always have live stations to show.
+2. **Deterministic CI smoke station** — 1 extra station `CS-SMOKE` (template `cs-smoke.station-template.json`) with `MeterValueSampleInterval` = 10 s, so the platform's end-to-end smoke test can start a charge and read a meaningful metered energy within seconds.
+3. **Optional automatic demo traffic** — mount `atg-on.json` instead of `atg-off.json` (the stack's `DEMO_ATG=on`) and the fleet continuously self-starts charging sessions to generate realistic demo data without any driver.
+
+## How it is wired into the stack
+
+- Connects over OCPP 1.6-J (WebSocket) to the core at `ws://server:8010/OCPP16/<tenantId>/<siteAreaId>`; the stack's bootstrap (`demo-up.sh` / `staging-up.sh`) rewrites `docker/config.json` / the staging config with the correct tenant ids **after** seeding, because the ids are minted fresh on a new volume.
+- Fleet definition lives in `docker/config.json` (`stationTemplateUrls`): 5 × `virtual-simple-atg` + 1 × `cs-smoke`; the ATG template file itself is bind-mounted from `atg-${DEMO_ATG:-off}.json`.
+- Staging variant: `config.staging.template.json` + the stack's `scripts/make-staging-sim-config.js` generate `config.staging.json` (git-ignored) pointing at the staging core.
+- Simulator Web UI is enabled with basic auth (`admin` / `admin` in the demo stack), exposed on host ports **8088** (UI) and **8089** (second UI) — watch stations connect, transact and stream meter values in real time.
+- `idtags.json` provides the driver idTags used by the demo fleet's authorization.
+
+## Run it (recommended: via the stack)
+
+```bash
+git clone https://github.com/techhiveet-hub/e-mobility-stack.git
+cd e-mobility && cp .env.example .env && ./scripts/demo-up.sh
+# Simulator UI: http://localhost:8088 (login admin/admin)
+```
+
+Running it standalone (dev): follow the upstream *Installation* and *Start simulator* sections below, then point `supervisionUrls` in your config at a TechHive core (`ws://<host>:8010/OCPP16/<tenantId>/<siteAreaId>` — get the ids via the stack's `scripts/read-tenant-ids.js`).
+
+---
+
 <!-- markdownlint-disable-file MD033 MD024 -->
 <div align="center">
 
