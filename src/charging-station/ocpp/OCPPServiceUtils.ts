@@ -64,6 +64,34 @@ import {
   min,
   roundTo,
 } from '../../utils/index.js'
+
+// Battery model for the SoC measurand when the template sets no fixed value:
+// a real car reports a level that rises as energy flows, not a fresh random
+// 0-100 % on every sample. Each session starts from a random realistic level
+// and climbs with the energy delivered into a nominal battery.
+const SIMULATED_BATTERY_WH = 60000
+const sessionStartSoc = new Map<string, number>()
+const simulatedSoc = (
+  stationId: string,
+  transactionId: number | string | undefined,
+  transactionEnergyWh: number | undefined,
+  minimum: number,
+  maximum: number
+): number => {
+  if (transactionId == null) {
+    return randomInt(minimum, maximum)
+  }
+  const key = `${stationId}:${transactionId.toString()}`
+  let startSoc = sessionStartSoc.get(key)
+  if (startSoc == null) {
+    if (sessionStartSoc.size > 1000) {
+      sessionStartSoc.clear()
+    }
+    startSoc = randomInt(Math.max(minimum, 20), Math.min(maximum, 60) + 1)
+    sessionStartSoc.set(key, startSoc)
+  }
+  return Math.min(maximum, Math.round(startSoc + ((transactionEnergyWh ?? 0) / SIMULATED_BATTERY_WH) * 100))
+}
 import { OCPP16Constants } from './1.6/OCPP16Constants.js'
 import { OCPP20Constants } from './2.0/OCPP20Constants.js'
 import { OCPPConstants } from './OCPPConstants.js'
@@ -335,7 +363,13 @@ export const buildMeterValue = (
             Number.parseInt(socSampledValueTemplate.value),
             socSampledValueTemplate.fluctuationPercent ?? Constants.DEFAULT_FLUCTUATION_PERCENT
           )
-          : randomInt(socMinimumValue, socMaximumValue)
+          : simulatedSoc(
+            chargingStation.stationInfo?.chargingStationId ?? '',
+            connector?.transactionId,
+            connector?.transactionEnergyActiveImportRegisterValue,
+            socMinimumValue,
+            socMaximumValue
+          )
         meterValue.sampledValue.push(
           buildSampledValue(socSampledValueTemplate, socSampledValueTemplateValue)
         )
